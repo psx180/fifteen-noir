@@ -16,7 +16,7 @@ struct Board<let N: u32> {
     height: u8, // height of the board
     grid: BoundedVec<Option<Piece>, N>, // list of pieces on the board, indexed as x + y * width
     empty: Position, // The position of the empty cell
-    move_sequence: BoundedVec<Position, 1024>, // sequence of moves made
+   // move_sequence: BoundedVec<Position, 1024>, // sequence of moves made
 }
 
 impl<let N: u32> Board<N> {
@@ -52,7 +52,7 @@ impl<let N: u32> Board<N> {
             self.empty = pos;
 
             // Record the move
-            self.move_sequence.push(pos);
+           // self.move_sequence.push(pos);
             valid = true;
         }
         valid
@@ -75,19 +75,29 @@ impl<let N: u32> Board<N> {
 
 }
 
+
+
+
+//unconstrained fn 
+global MAX_MOVES: u32 = 256;
+
 fn main(
-    move_count : pub u16,
+    move_count : pub u32,
     init_grid: pub [u8; 16], // A permutation of numbers 0-15 representing the initial grid, 1-indexed, with 0 as the empty space
-    move_array: [Position; 1024] // A sequence of moves, represented as positions to swap with the empty space
+    move_array: [Position; MAX_MOVES] // A sequence of moves, represented as positions to swap with the empty space
 ) {
 
     //assert(move_count == move_sequence.len() as u16, "move count doesnt match move sequence");
-
+    //check that move_count is within bounds
+    assert(move_count <= MAX_MOVES, "move_count exceeds maximum allowed moves");
+    
+    // Check that init_grid is a valid permutation of 0..15
     let sorted = init_grid.sort();
     for i in 0..16 {
         assert(sorted[i] == i as u8, "init_grid must be a permutation of 0..15");
     }
 
+    // Find empty position and transform init_grid to 0-indexed Options
     let mut empty_index: u32 = 0;
     let mut grid: BoundedVec<Option<Piece>, 16> = BoundedVec::new();
     for i in 0..16 {
@@ -100,23 +110,23 @@ fn main(
         }
     }
 
-    let mut move_sequence: BoundedVec<Position, 1024> = BoundedVec::from_parts(move_array, move_count as u32);
-    //move_sequence.extend_from_array(move_array);
 
     let mut board = Board {
         width: 4,
         height: 4,
         empty: Position{x: (empty_index % 4) as u8, y: (empty_index / 4) as u8 },
-        grid,
-        move_sequence
+        grid
     };
 
-    for i in 0..1024 {
+    // Check that the sequence of moves is valid and apply them
+    for i in 0..MAX_MOVES {
         if i < move_count {
-            let pos = move_sequence.get(i as u32);
+            let pos = move_array[i as u32];
             assert(board.make_move(pos), "Invalid move");
         }
     }
+
+    // Check if the board is in a winning state
     assert(board.check_win_condition(), "Move sequence isn't winning");
 
 }
@@ -126,7 +136,7 @@ fn main(
 fn test_main() {
    // let mut ms = BoundedVec::new();
    // ms.push(Position{x: 3, y: 3});
-    let mut array: [Position; 1024] = [Position{x: 0, y: 0}; 1024];
+    let mut array: [Position; MAX_MOVES] = [Position{x: 0, y: 0}; MAX_MOVES];
     array[0] = Position{x: 3, y: 3};
     main(1,
     [1,2,3,4,5,6,7,8,9,10,11,12,13,14,0,15],
