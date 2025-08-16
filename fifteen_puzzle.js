@@ -52,10 +52,11 @@ function stir_or_set() {
     } else {
         stir_slots();
         check_slots(() => {
+            console.warn('puzzle still solved after shuffle. moving one piece');
             let tmp = p.diff;
             p.diff = 1;
             stir_slots();
-            p.diff = tmp();
+            p.diff = tmp;
         });
         p.init_position = [...flat_m()];
 
